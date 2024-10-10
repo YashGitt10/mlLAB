@@ -1,3 +1,4 @@
+'''
 import numpy.core.multiarray as multiarray
 import json
 import itertools
@@ -448,4 +449,4 @@ if __name__ == '__main__':
 
 
 
-
+'''
