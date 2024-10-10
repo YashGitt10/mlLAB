@@ -1,4 +1,4 @@
-'''
+
 import numpy.core.multiarray as multiarray
 import json
 import itertools
@@ -133,28 +133,31 @@ def generate_optimizers(lr_rate):
 #Sensitivity
 def sensitivity(y_true,y_pred):
     y_pred=math_ops.round(y_pred)
-    TP = tf.count_nonzero(y_pred * y_true)
-    TN = tf.count_nonzero((y_pred - 1) * (y_true - 1))
-    FP = tf.count_nonzero(y_pred * (y_true - 1))
-    FN = tf.count_nonzero((y_pred - 1) * y_true)
+    y_true_float = tf.cast(y_true, tf.float32)
+    TP = tf.math.count_nonzero(y_pred * y_true_float)
+    TN = tf.math.count_nonzero((y_pred - 1) * (y_true_float - 1))
+    FP = tf.math.count_nonzero(y_pred * (y_true_float - 1))
+    FN = tf.math.count_nonzero((y_pred - 1) * y_true_float)
     metric=tf.divide(TP,TP+FN)
     return metric
 # Specificity
 def specificity(y_true,y_pred):
     y_pred=math_ops.round(y_pred)
-    TP = tf.count_nonzero(y_pred * y_true)
-    TN = tf.count_nonzero((y_pred - 1) * (y_true - 1))
-    FP = tf.count_nonzero(y_pred * (y_true - 1))
-    FN = tf.count_nonzero((y_pred - 1) * y_true)
+    y_true_float = tf.cast(y_true, tf.float32)
+    TP = tf.math.count_nonzero(y_pred * y_true_float)
+    TN = tf.math.count_nonzero((y_pred - 1) * (y_true_float - 1))
+    FP = tf.math.count_nonzero(y_pred * (y_true_float - 1))
+    FN = tf.math.count_nonzero((y_pred - 1) * y_true_float)
     metric=tf.divide(TN,TN+FP)
     return metric
 # F1-Score
 def f1_score(y_true,y_pred):
     y_pred=math_ops.round(y_pred)
-    TP = tf.count_nonzero(y_pred * y_true)
-    TN = tf.count_nonzero((y_pred - 1) * (y_true - 1))
-    FP = tf.count_nonzero(y_pred * (y_true - 1))
-    FN = tf.count_nonzero((y_pred - 1) * y_true)
+    y_true_float = tf.cast(y_true, tf.float32)
+    TP = tf.math.count_nonzero(y_pred * y_true_float)
+    TN = tf.math.count_nonzero((y_pred - 1) * (y_true_float - 1))
+    FP = tf.math.count_nonzero(y_pred * (y_true_float - 1))
+    FN = tf.math.count_nonzero((y_pred - 1) * y_true_float)
     metric=tf.divide(TN,TN+FP)
     precision = tf.divide(TP,TP + FP)
     sensitivity = tf.divide(TP,TP+FN)
@@ -197,19 +200,13 @@ def cnn_classifier(prot_data,smile_data,labels,prot_val,smile_val,labels_val,pro
     smile_input=generate_input(smile_len,'int32')
     
     # Encoding Type
-    # if encoding_type=='embedding':
-    #     #Embedding Layers: it allows to map integers into useful continuous vectors with a certain dimension (embedding size)
-    #     protein_embedding=generate_embedding(prot_dict_size,embedding_size,prot_seq_len)(protein_input)
-    #     smile_embedding=generate_embedding(smile_dict_size,embedding_size,smile_len)(smile_input)
-    # elif encoding_type=='one_hot':
-    #     protein_embedding=OneHot(input_dim=prot_dict_size, input_length=prot_seq_len)(protein_input)
-    #     smile_embedding=OneHot(input_dim=smile_dict_size,input_length=smile_len)(smile_input)
-    if encoding_type == 'embedding':
-        protein_embedding = Embedding(input_dim=prot_dict_size+1, output_dim=embedding_size)(protein_input)
-        smile_embedding = Embedding(input_dim=smile_dict_size+1, output_dim=embedding_size)(smile_input)
-    elif encoding_type == 'one_hot':
-        protein_embedding = tf.one_hot(protein_input, depth=prot_dict_size)
-        smile_embedding = tf.one_hot(smile_input, depth=smile_dict_size)
+    if encoding_type=='embedding':
+        #Embedding Layers: it allows to map integers into useful continuous vectors with a certain dimension (embedding size)
+        protein_embedding=generate_embedding(prot_dict_size,embedding_size,prot_seq_len)(protein_input)
+        smile_embedding=generate_embedding(smile_dict_size,embedding_size,smile_len)(smile_input)
+    elif encoding_type=='one_hot':
+        protein_embedding=OneHot(input_dim=prot_dict_size, input_length=prot_seq_len)(protein_input)
+        smile_embedding=OneHot(input_dim=smile_dict_size,input_length=smile_len)(smile_input)
 
 
     # Convolutional Layers
@@ -305,7 +302,8 @@ def cnn_classifier(prot_data,smile_data,labels,prot_val,smile_val,labels_val,pro
 
     #Callbacks
     early_stopping=EarlyStopping(monitor='val_f1_score', min_delta=0, patience=50, verbose=0, mode='max',restore_best_weights=True)
-    model_checkpoint=ModelCheckpoint(filepath=path,monitor='val_f1_score', verbose=0, save_best_only=True, save_weights_only=False, mode='max')
+    model_checkpoint = ModelCheckpoint(filepath=path.replace('.h5', ''), monitor='val_f1_score', save_best_only=True)
+    # model_checkpoint=ModelCheckpoint(filepath=path,monitor='val_f1_score', verbose=0, save_best_only=True, save_weights_only=False, mode='max')
    
 
     if option_validation:
@@ -449,4 +447,4 @@ if __name__ == '__main__':
 
 
 
-'''
+
